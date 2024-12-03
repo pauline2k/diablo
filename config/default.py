@@ -70,6 +70,8 @@ CURRENT_TERM_RECORDINGS_END = None
 
 DBLINK_NESSIE_RDS = 'Nessie database name'
 
+DEFAULT_ZOOM_USER_ID = 'zoomdefault'
+
 DEV_AUTH_ENABLED = False
 DEV_AUTH_PASSWORD = 'another secret'
 
