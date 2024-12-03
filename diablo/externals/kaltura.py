@@ -36,7 +36,7 @@ from diablo.lib.util import default_timezone, epoch_time_to_isoformat, format_da
 from flask import current_app as app
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.exceptions import KalturaClientException
-from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaCategory, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
+from KalturaClient.Plugins.Core import KalturaBaseEntry, KalturaBaseEntryFilter, KalturaCategory, KalturaCategoryEntry, KalturaCategoryEntryFilter, \
     KalturaCategoryEntryStatus, KalturaCategoryFilter, KalturaEntryDisplayInSearchType, KalturaEntryModerationStatus, \
     KalturaEntryStatus, KalturaEntryType, KalturaFilterPager, KalturaMediaEntryFilter, KalturaNullableBoolean
 from KalturaClient.Plugins.Schedule import KalturaRecordScheduleEvent, KalturaRecordScheduleEventFilter, \
@@ -90,8 +90,16 @@ class Kaltura:
         self.client.categoryEntry.add(category_entry)
 
     @skip_when_pytest()
+    def delete_base_entry(self, entry_id):
+        self.client.baseEntry.delete(entry_id)
+
+    @skip_when_pytest()
     def delete_kaltura_category(self, category_id, entry_id):
         self.client.categoryEntry.delete(entry_id, category_id)
+
+    @skip_when_pytest(mock_object=[])
+    def get_base_entries_for_owner(self, owner_id):
+        return self._get_base_entries(KalturaBaseEntryFilter(userIdEqual=owner_id))
 
     @skip_when_pytest()
     def get_base_entry(self, entry_id):
@@ -337,6 +345,14 @@ class Kaltura:
                 pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
             )
         return _events_to_api_json(_get_kaltura_objects(_fetch))
+
+    def _get_base_entries(self, kaltura_base_entry_filter):
+        def _fetch(page_index):
+            return self.client.baseEntry.list(
+                filter=kaltura_base_entry_filter,
+                pager=KalturaFilterPager(pageIndex=page_index, pageSize=DEFAULT_KALTURA_PAGE_SIZE),
+            )
+        return _get_kaltura_objects(_fetch)
 
     def _get_categories(self, kaltura_category_filter):
         def _fetch(page_index):
