@@ -22,6 +22,8 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 "AS IS". REGENTS HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
 ENHANCEMENTS, OR MODIFICATIONS.
 """
+from time import sleep
+
 from diablo.externals.b_connected import BConnected
 from diablo.jobs.base_job import BaseJob
 from diablo.models.queued_email import QueuedEmail
@@ -53,6 +55,7 @@ class EmailsJob(BaseJob):
             else:
                 # If send() fails then report the error and DO NOT delete the queued item.
                 app.logger.error(f'Failed to send email: {queued_email}')
+            sleep(app.config['EMAIL_SLEEP_INTERVAL'])
 
     @classmethod
     def description(cls):
