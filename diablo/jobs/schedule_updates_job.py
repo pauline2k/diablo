@@ -51,17 +51,21 @@ class ScheduleUpdatesJob(BaseJob):
 
 def _queue_schedule_updates(term_id):
     for course in SisSection.get_courses_scheduled(term_id=term_id, include_administrative_proxies=True):
-        eligible_meetings = course.get('meetings', {}).get('eligible', [])
-        ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
-        if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
-            _queue_not_scheduled_update(course)
-        if course['optOuts']:
-            _queue_opt_out_update(course)
-        elif _valid_meeting_count(eligible_meetings) == 0 and _valid_meeting_count(ineligible_meetings) > 0:
-            _queue_room_not_eligible_update(course)
-        else:
-            _queue_meeting_updates(course)
-            _queue_instructor_updates(course)
+        try:
+            eligible_meetings = course.get('meetings', {}).get('eligible', [])
+            ineligible_meetings = course.get('meetings', {}).get('ineligible', [])
+            if course['deletedAt'] or (_valid_meeting_count(eligible_meetings) + _valid_meeting_count(ineligible_meetings) == 0):
+                _queue_not_scheduled_update(course)
+            if course['optOuts']:
+                _queue_opt_out_update(course)
+            elif _valid_meeting_count(eligible_meetings) == 0 and _valid_meeting_count(ineligible_meetings) > 0:
+                _queue_room_not_eligible_update(course)
+            else:
+                _queue_meeting_updates(course)
+                _queue_instructor_updates(course)
+        except Exception as e:
+            app.logger.error(f"Failed to queue schedule updates for section {course.get('sectionId')}, aborting job")
+            raise e
 
 
 def _queue_not_scheduled_update(course):
@@ -136,7 +140,9 @@ def _queue_meeting_updates(course):
         meeting = unmatched_sis_meetings[i] if i < len(unmatched_sis_meetings) else None
         scheduled = unmatched_scheduled_meetings[i] if i < len(unmatched_scheduled_meetings) else None
 
-        if not scheduled and is_valid_meeting_schedule(meeting):
+        if not scheduled:
+            if not is_valid_meeting_schedule(meeting):
+                continue
             ScheduleUpdate.queue(
                 term_id=course['termId'],
                 section_id=course['sectionId'],
