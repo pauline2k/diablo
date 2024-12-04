@@ -39,6 +39,7 @@ CURRENT_TERM_RECORDINGS_END = '2021-11-24'
 DIABLO_BASE_URL = 'https://manage-test.coursecapture.berkeley.edu'
 
 EB_ENVIRONMENT = 'diablo-test'
+EMAIL_SLEEP_INTERVAL = 0.1
 
 FIXTURES_PATH = f'{BASE_DIR}/fixtures'
 
