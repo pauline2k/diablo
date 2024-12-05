@@ -1014,7 +1014,7 @@ export default {
       this.publishType = this.course.publishType
       this.recordingType = this.course.recordingType
       this.publishCanvasSites = this.course.canvasSites
-      this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions) : []
+      this.recordingTypeOptions = this.meeting.room ? Object.keys(this.meeting.room.recordingTypeOptions || {}) : []
       if (!this.$currentUser.isAdmin) {
         getCanvasSitesTeaching(this.$currentUser.uid).then(data => {
           this.publishCanvasSiteOptions = data
