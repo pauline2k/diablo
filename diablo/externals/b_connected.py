@@ -74,7 +74,7 @@ class BConnected:
             if app.config['DIABLO_ENV'] == 'test':
                 write_email_to_log(message=message, recipient=recipient, subject_line=subject_line)
             else:
-                from_address = f"{app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>"
+                from_address = f"{app.config['EMAIL_SENDER_LABEL']} <{app.config['EMAIL_SENDER_ADDRESS']}>"
 
                 for email_address in self.get_email_addresses(user=recipient):
                     msg = MIMEMultipart('alternative')
@@ -149,7 +149,7 @@ def write_email_to_log(message, recipient, subject_line):
 
         To: {recipient['name']} <{recipient['email']}>
         Cc: Course Capture Admin <{app.config['EMAIL_DIABLO_ADMIN']}>
-        From: {app.config['EMAIL_COURSE_CAPTURE_SUPPORT_LABEL']} <{app.config['EMAIL_COURSE_CAPTURE_SUPPORT']}>
+        From: {app.config['EMAIL_SENDER_LABEL']} <{app.config['EMAIL_SENDER_ADDRESS']}>
         Subject: {subject_line}
 
         Message:
