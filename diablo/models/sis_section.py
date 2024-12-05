@@ -218,7 +218,6 @@ class SisSection(db.Model):
             include_full_schedules=True,
             include_ineligible=False,
             include_non_principal_sections=False,
-            include_null_meeting_locations=False,
             instructor_uids=None,
             section_ids=None,
     ):
@@ -258,7 +257,7 @@ class SisSection(db.Model):
                 r.id AS room_id,
                 r.location AS room_location
             FROM sis_sections s
-            {'LEFT' if include_null_meeting_locations or include_ineligible else ''} JOIN rooms r ON r.location = s.meeting_location
+            {'LEFT' if include_ineligible else ''} JOIN rooms r ON r.location = s.meeting_location
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             {exclude_scheduled_join}
             WHERE
@@ -403,6 +402,7 @@ class SisSection(db.Model):
             section_ids=scheduled_section_ids,
             instructor_uids=instructor_uids,
             include_deleted=True,
+            include_ineligible=True,
             include_administrative_proxies=include_administrative_proxies,
             include_full_schedules=include_full_schedules,
         )
@@ -486,7 +486,6 @@ class SisSection(db.Model):
         sql = """
             SELECT DISTINCT s.section_id
             FROM sis_sections s
-            JOIN rooms r ON r.location = s.meeting_location
             JOIN scheduled d ON d.section_id = s.section_id AND d.term_id = :term_id AND d.deleted_at IS NULL
             LEFT JOIN instructors i ON i.uid = s.instructor_uid
             WHERE
