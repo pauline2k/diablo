@@ -277,7 +277,7 @@ def _get_room_summary(meeting):
         return None
     else:
         return {
-            'id': room['id'],
-            'location': room['location'],
-            'kalturaResourceId': room['kalturaResourceId'],
+            'id': room.get('id'),
+            'location': room.get('location'),
+            'kalturaResourceId': room.get('kalturaResourceId'),
         }
