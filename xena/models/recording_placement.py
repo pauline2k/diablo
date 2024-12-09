@@ -28,11 +28,11 @@ from enum import Enum
 
 class RecordingPlacement(Enum):
 
+    PLACE_IN_MY_MEDIA = {
+        'desc': 'Place in My Media',
+        'db': 'kaltura_my_media',
+    }
     PUBLISH_AUTOMATICALLY = {
         'desc': 'Publish to the Media Gallery',
         'db': 'kaltura_media_gallery',
-    }
-    PUBLISH_TO_MY_MEDIA = {
-        'desc': 'Place in My Media',
-        'db': 'kaltura_my_media',
     }

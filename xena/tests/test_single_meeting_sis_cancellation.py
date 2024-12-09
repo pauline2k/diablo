@@ -23,6 +23,7 @@ SOFTWARE AND ACCOMPANYING DOCUMENTATION, IF ANY, PROVIDED HEREUNDER IS PROVIDED
 ENHANCEMENTS, OR MODIFICATIONS.
 """
 
+from flask import current_app as app
 import pytest
 from xena.models.email_template_type import EmailTemplateType
 from xena.models.recording_placement import RecordingPlacement
@@ -70,6 +71,7 @@ class TestCourseCancellation:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     # COURSE IS CANCELLED BEFORE SCHEDULING
 
@@ -92,7 +94,7 @@ class TestCourseCancellation:
     def test_cancel_pre_sched_no_teacher_result(self):
         self.course_page.log_out()
         self.login_page.dev_auth(self.instructor.uid)
-        self.courses_page.wait_for_title_contains('Eligible for Capture')
+        self.courses_page.wait_for_title_contains(f"Your {app.config['CURRENT_TERM_NAME']} Courses")
         assert not self.courses_page.is_present(OuijaBoardPage.course_row_link_locator(self.section))
 
     # RECORDINGS NOT SCHEDULED FOR CANCELLED COURSE
@@ -107,8 +109,8 @@ class TestCourseCancellation:
         assert not util.get_kaltura_id(self.recording_schedule)
 
     def test_no_annunciation(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.instructor) == 0
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 0
 
     # COURSE IS RESTORED AND SCHEDULED
 
@@ -120,7 +122,7 @@ class TestCourseCancellation:
     def test_kaltura_schedule_id(self):
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # COURSE CANCELED AGAIN
 

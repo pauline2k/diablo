@@ -70,16 +70,18 @@ class TestCourseScheduleChanges:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instr)
 
     def test_schedule_recordings(self):
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_welcome_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section, self.instr) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instr) == 1
 
     # SCHEDULED COURSE CHANGES MEETING TIME
 
@@ -136,10 +138,13 @@ class TestCourseScheduleChanges:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_history_new_eligible_times(self):
-        old_val = None
-        new_val = None
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('meeting_updated', old_val, new_val, None, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='meeting_updated',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
 
     # SCHEDULED COURSE MEETING START/END AND MEETING DAYS/TIMES CHANGE TO NULL
 
@@ -169,10 +174,13 @@ class TestCourseScheduleChanges:
         assert util.get_sent_email_count(EmailTemplateType.INSTR_SCHEDULE_CHANGE, self.section, self.instr) == 1
 
     def test_history_no_room(self):
-        old_val = None
-        new_val = '—'
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('not_scheduled', old_val, new_val, None, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='not_scheduled',
+                                            old_value=None,
+                                            new_value='—',
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)
 
     def test_reset_data(self):
         util.update_course_start_end_dates(self.section, self.meeting, self.new_meeting.meeting_schedule)

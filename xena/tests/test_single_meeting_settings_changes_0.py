@@ -78,12 +78,13 @@ class TestScheduling0:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.instructor)
+        self.canvas_page.add_user_to_site(self.site, self.instructor, 'Teacher')
 
     # CHECK FILTERS - NOT SCHEDULED
 
@@ -133,14 +134,14 @@ class TestScheduling0:
     def test_no_history(self):
         assert not self.course_page.update_history_table_rows()
 
-    # RUN SEMESTER START JOB
+    # RUN SCHEDULE UPDATE JOB
 
-    def test_semester_start(self):
+    def test_schedule_update(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
 
@@ -209,8 +210,8 @@ class TestScheduling0:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 1
 
     # INSTRUCTOR LOGS IN
 
@@ -270,15 +271,15 @@ class TestScheduling0:
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
 
     def test_no_how_to_remove_a_recording_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
+        assert not self.course_page.is_present(self.course_page.HOW_TO_REMOVE_LINK)
 
     def test_how_to_download_second_stream_link(self):
-        title = 'IT - How do I download the second stream of a dual-stream video? '
+        title = 'IT - How do I download the second stream of a dual-stream video?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_course_capture_faq_link(self):
-        title = 'Course Capture FAQ | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     # VERIFY AVAILABLE OPTIONS
 
@@ -325,15 +326,15 @@ class TestScheduling0:
 
     def test_how_to_remove_a_recording_link(self):
         title = 'IT - How do I remove media from a bCourses Media Gallery or from My Media?'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
+        assert self.course_page.external_link_valid(self.course_page.HOW_TO_REMOVE_LINK, title)
 
     def test_how_to_download_second_stream_link_again(self):
-        title = 'IT - How do I download the second stream of a dual-stream video? '
+        title = 'IT - How do I download the second stream of a dual-stream video?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_course_capture_faq_link_again(self):
-        title = 'Course Capture FAQ | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     def test_no_history_for_instructors(self):
         self.course_page.load_page(self.section)
@@ -358,7 +359,7 @@ class TestScheduling0:
 
     def test_course_history_rec_placement(self):
         self.course_page.verify_history_row(field='publish_type',
-                                            old_value=RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db'],
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             requestor=self.instructor,
                                             status='queued')
@@ -421,11 +422,12 @@ class TestScheduling0:
     # REVERT TO MY MEDIA PLACEMENT TYPE AND NO CAMERA OPERATOR
 
     def test_course_page_revert_placement(self):
+        self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
-        self.course_page.select_recording_placement(RecordingPlacement.PUBLISH_TO_MY_MEDIA)
+        self.course_page.select_recording_placement(RecordingPlacement.PLACE_IN_MY_MEDIA)
         self.course_page.save_recording_placement_edits()
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_course_page_revert_operator(self):
         self.course_page.click_rec_type_edit_button()
@@ -433,7 +435,11 @@ class TestScheduling0:
         self.course_page.save_recording_type_edits()
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
-    def test_rever_how_to_publish_from_my_media_link(self):
+    def test_revert_how_to_publish_from_my_media_link(self):
+        self.course_page.log_out()
+        self.course_page.hit_url(self.term.id, self.section.ccn)
+        self.login_page.dev_auth(self.instructor.uid)
+        self.course_page.wait_for_diablo_title(f'{self.section.code}, {self.section.number}')
         title = 'IT - How do I publish media from My Media to a Media Gallery in bCourses?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_PUBLISH_LINK, title)
 
@@ -442,18 +448,20 @@ class TestScheduling0:
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_EMBED_LINK, title)
 
     def test_revert_no_how_to_remove_a_recording_link(self):
-        assert not self.course_page.is_present(self.course_page.HOW_TO_EMBED_LINK)
+        assert not self.course_page.is_present(self.course_page.HOW_TO_REMOVE_LINK)
 
     def test_revert_how_to_download_second_stream_link(self):
-        title = 'IT - How do I download the second stream of a dual-stream video? '
+        title = 'IT - How do I download the second stream of a dual-stream video?'
         assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
 
     def test_revert_course_capture_faq_link(self):
-        title = 'Course Capture FAQ | Research, Teaching, and Learning'
-        assert self.course_page.external_link_valid(self.course_page.HOW_TO_DOWNLOAD_LINK, title)
+        title = 'Course Capture FAQ | Research, Teaching, & Learning'
+        assert self.course_page.external_link_valid(self.course_page.COURSE_CAPTURE_FAQ_LINK, title)
 
     def test_update_jobs_revert_placement(self):
-        self.course_page.click_jobs_link()
+        self.course_page.log_out()
+        self.login_page.dev_auth()
+        self.ouija_page.click_jobs_link()
         self.jobs_page.run_settings_update_job_sequence()
 
     def test_kaltura_old_series_deleted(self):
@@ -497,7 +505,7 @@ class TestScheduling0:
 
     def test_course_history_rec_placement_updated(self):
         self.course_page.verify_history_row(field='publish_type',
-                                            old_value=RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db'],
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             requestor=self.instructor,
                                             status='succeeded',
@@ -514,7 +522,7 @@ class TestScheduling0:
     def test_course_history_rec_placement_reverted(self):
         self.course_page.verify_history_row(field='publish_type',
                                             old_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
-                                            new_value=RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)
@@ -526,13 +534,3 @@ class TestScheduling0:
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)
-
-    # VERIFY REMINDER EMAIL
-
-    def test_reminder_email_job(self):
-        self.jobs_page.load_page()
-        self.jobs_page.run_remind_instructors_job_sequence()
-
-    def test_reminder_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_REMINDER, self.section,
-                                         self.instructor) == 1

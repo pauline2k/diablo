@@ -26,4 +26,4 @@ responses==0.23.1
 tox==4.6.3
 
 # For Xena
-selenium==4.3.0
+selenium==4.27.0

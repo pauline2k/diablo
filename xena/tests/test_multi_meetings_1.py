@@ -93,6 +93,8 @@ class TestWeirdTypeC:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.original_instructor)
+        util.reset_sent_email_test_data(section=None, instructor=self.new_instructor)
 
     # SCHEDULE RECORDINGS
 
@@ -101,7 +103,7 @@ class TestWeirdTypeC:
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_0)
         self.recording_sched_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_sched_0.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_sched_0.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
 
@@ -174,8 +176,8 @@ class TestWeirdTypeC:
         assert len(self.course_page.visible_rooms()) == 1
 
     def test_new_course_scheduled_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.original_instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.original_instructor) == 1
 
     # INELIGIBLE MEETING BECOMES ELIGIBLE
 
@@ -190,7 +192,7 @@ class TestWeirdTypeC:
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_sched_1)
         self.recording_sched_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_sched_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_sched_1.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_meeting_0_room_page_ineligible_becomes_eligible(self):
         self.rooms_page.load_page()
@@ -289,7 +291,7 @@ class TestWeirdTypeC:
 
     def test_no_instructor_removed_email(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_REMOVED, self.section,
-                                         self.original_instructor) == 1
+                                         self.original_instructor) == 0
 
     # INSTRUCTOR ADDED
 
@@ -419,6 +421,7 @@ class TestWeirdTypeC:
         self.kaltura_page.verify_publish_status(self.recording_sched_1)
 
     def test_meeting_0_kaltura_series_room_removed(self):
+        self.kaltura_page.close_window_and_switch()
         self.kaltura_page.load_event_edit_page(self.recording_sched_0.series_id)
         self.kaltura_page.wait_for_title('Access Denied - UC Berkeley - Test')
 
@@ -442,19 +445,17 @@ class TestWeirdTypeC:
                                             published=True)
 
     def test_history_instructor_removed(self):
-        old_val = CoursePage.expected_uids_converter([self.original_instructor])
         self.course_page.verify_history_row(field='instructor_uids',
-                                            old_value=old_val,
+                                            old_value=CoursePage.expected_uids_converter([self.original_instructor]),
                                             new_value=[],
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
 
     def test_history_instructor_added(self):
-        new_val = CoursePage.expected_uids_converter([self.new_instructor])
         self.course_page.verify_history_row(field='instructor_uids',
                                             old_value=[],
-                                            new_value=new_val,
+                                            new_value=CoursePage.expected_uids_converter([self.new_instructor]),
                                             requestor=None,
                                             status='succeeded',
                                             published=True)

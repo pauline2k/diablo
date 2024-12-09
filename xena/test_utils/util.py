@@ -392,7 +392,11 @@ def reset_test_data(section):
     add_sis_sections_rows(section)
 
 
-def reset_sent_email_test_data(section, instructor=None, templates=None):
+def reset_sent_email_test_data(section=None, instructor=None, templates=None):
+    if section:
+        sec_clause = f' AND section_id = {section.ccn}'
+    else:
+        sec_clause = ''
     if templates:
         temps = [t.value['type'] for t in templates]
         sql_templates = ''
@@ -405,29 +409,29 @@ def reset_sent_email_test_data(section, instructor=None, templates=None):
         inst_clause = f" AND recipient_uid = '{instructor.uid}'"
     else:
         inst_clause = ''
+    term_id = app.config['CURRENT_TERM_ID']
     sql = f"""DELETE FROM sent_emails
-                    WHERE term_id = {section.term.id}
-                      AND section_id = {section.ccn}{temp_clause}{inst_clause}
+                    WHERE term_id = {term_id}{sec_clause}{temp_clause}{inst_clause}
     """
     app.logger.info(sql)
     db.session.execute(text(sql))
     std_commit(allow_test_environment=True)
 
 
-def get_sent_email_count(template, section, instructor=None):
+def get_sent_email_count(template, section=None, instructor=None):
+    term_id = app.config['CURRENT_TERM_ID']
+    clause = f' AND section_id = {section.ccn}' if section else ''
     if instructor:
         sql = f"""SELECT COUNT(*)
                     FROM sent_emails
-                   WHERE term_id = {section.term.id}
-                     AND section_id = {section.ccn}
+                   WHERE term_id = {term_id}{clause}
                      AND recipient_uid = '{instructor.uid}'
                      AND template_type = '{template.value['type']}'
         """
     else:
         sql = f"""SELECT COUNT(*)
                     FROM sent_emails
-                   WHERE term_id = {section.term.id}
-                     AND section_id = {section.ccn}
+                   WHERE term_id = {term_id}{clause}
                      AND template_type = '{template.value['type']}'
         """
     app.logger.info(sql)

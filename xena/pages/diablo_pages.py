@@ -81,6 +81,7 @@ class DiabloPages(Page):
 
     def click_jobs_link(self):
         app.logger.info("Clicking 'The Engine Room' link")
+        time.sleep(2)
         self.wait_for_element_and_click(DiabloPages.JOBS_LINK)
         time.sleep(1)
         self.mouseover(self.element(DiabloPages.MENU_BUTTON))

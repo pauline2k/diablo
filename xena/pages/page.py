@@ -27,7 +27,6 @@ import time
 
 from flask import current_app as app
 from selenium.common import exceptions
-from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -141,14 +140,11 @@ class Page(object):
         sleep_default = app.config['CLICK_SLEEP']
         time.sleep(addl_pause or sleep_default)
         try:
-            Wait(driver=self.driver, timeout=util.get_short_timeout()).until(
-                method=ec.element_to_be_clickable(locator),
-                message=f'Failed to click_element: {str(locator)}',
-            )
             time.sleep(addl_pause or sleep_default)
             self.element(locator).click()
-        except ElementClickInterceptedException:
-            self.click_element_js(locator)
+        except (exceptions.ElementClickInterceptedException, exceptions.ElementNotInteractableException) as error:
+            app.logger.error(f'Failed to click {locator}, using JS instead - {error}')
+            self.click_element_js(locator, addl_pause)
 
     def click_element_js(self, locator, addl_pause=None):
         sleep_default = app.config['CLICK_SLEEP']
@@ -200,7 +196,7 @@ class Page(object):
     def wait_for_title(self, string):
         app.logger.info(f"'Waiting for page title '{string}'")
         Wait(self.driver, util.get_short_timeout()).until(
-            method=(ec.title_is(string)),
+            method=(ec.title_contains(string)),
             message=f'Failed wait_for_title: {string}',
         )
 
