@@ -84,7 +84,7 @@ class TestCourseInstructorChanges:
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.old_instructor)
+        self.canvas_page.add_user_to_site(self.site, self.old_instructor, 'TA')
 
     # COURSE SCHEDULED WITH INSTRUCTOR 1, WHO MODIFIES RECORDING SETTINGS
 
@@ -92,7 +92,7 @@ class TestCourseInstructorChanges:
         self.jobs_page.load_page()
         self.jobs_page.run_schedule_update_job_sequence()
         util.get_kaltura_id(self.recording_schedule)
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
 
     def test_modify_recording_settings(self):
@@ -122,7 +122,7 @@ class TestCourseInstructorChanges:
         util.change_course_instructor(self.section, self.old_instructor, self.new_instructor)
 
     def test_add_new_instructor_to_site(self):
-        self.canvas_page.add_teacher_to_site(self.site, self.new_instructor)
+        self.canvas_page.add_user_to_site(self.site, self.new_instructor, 'TA')
 
     # UPDATE KALTURA SERIES
 
@@ -173,21 +173,33 @@ class TestCourseInstructorChanges:
     # HISTORY
 
     def test_history_rec_placement(self):
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
-        self.course_page.verify_history_row('publish_type', old_val, new_val, self.old_instructor, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            requestor=self.old_instructor,
+                                            status='succeeded',
+                                            published=True)
 
     def test_history_rec_type(self):
-        old_val = RecordingType.VIDEO_SANS_OPERATOR.value['db']
-        new_val = RecordingType.VIDEO_WITH_OPERATOR.value['db']
-        self.course_page.verify_history_row('recording_type', old_val, new_val, self.old_instructor, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='recording_type',
+                                            old_value=RecordingType.VIDEO_SANS_OPERATOR.value['db'],
+                                            new_value=RecordingType.VIDEO_WITH_OPERATOR.value['db'],
+                                            requestor=self.old_instructor,
+                                            status='succeeded',
+                                            published=True)
 
     def test_history_canvas_site(self):
-        old_val = '—'
-        new_val = CoursePage.expected_site_ids_converter([self.site])
-        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.old_instructor, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value='—',
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            requestor=self.old_instructor,
+                                            status='succeeded',
+                                            published=True)
 
     def test_history_new_instructor(self):
-        old_val = CoursePage.expected_uids_converter([self.old_instructor])
-        new_val = CoursePage.expected_uids_converter([self.new_instructor])
-        self.course_page.verify_history_row('instructor_uids', old_val, new_val, None, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='instructor_uids',
+                                            old_value=CoursePage.expected_uids_converter([self.old_instructor]),
+                                            new_value=CoursePage.expected_uids_converter([self.new_instructor]),
+                                            requestor=None,
+                                            status='succeeded',
+                                            published=True)

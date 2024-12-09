@@ -87,6 +87,8 @@ class TestWeirdTypeB:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.original_instructor)
+        util.reset_sent_email_test_data(section=None, instructor=self.new_instructor)
 
     # SCHEDULE RECORDINGS
 
@@ -95,7 +97,7 @@ class TestWeirdTypeB:
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
 
@@ -325,27 +327,23 @@ class TestWeirdTypeB:
         self.course_page.verify_recording_placement(self.recording_schedule)
 
     def test_course_scheduled_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.new_instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.new_instructor) == 1
 
     # COURSE HISTORY
 
     def test_course_history_instructor_removed(self):
-        old_val = CoursePage.expected_uids_converter([self.original_instructor])
-        new_val = []
         self.course_page.verify_history_row(field='instructor_uids',
-                                            old_value=old_val,
-                                            new_value=new_val,
+                                            old_value=CoursePage.expected_uids_converter([self.original_instructor]),
+                                            new_value=[],
                                             requestor=None,
                                             status='succeeded',
                                             published=True)
 
     def test_course_history_instructor_added(self):
-        old_val = []
-        new_val = CoursePage.expected_uids_converter([self.new_instructor])
         self.course_page.verify_history_row(field='instructor_uids',
-                                            old_value=old_val,
-                                            new_value=new_val,
+                                            old_value=[],
+                                            new_value=CoursePage.expected_uids_converter([self.new_instructor]),
                                             requestor=None,
                                             status='succeeded',
                                             published=True)

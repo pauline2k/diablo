@@ -38,12 +38,12 @@ class CalNetPage(Page):
 
     USERNAME_INPUT = (By.ID, 'username')
     PASSWORD_INPUT = (By.ID, 'password')
-    SUBMIT_BUTTON = (By.ID, 'submit')
+    SUBMIT_BUTTON = (By.ID, 'submitBtn')
     TRUST_BROWSER_BUTTON = (By.ID, 'trust-browser-button')
-    BAD_CREDS = (By.XPATH, '//span[contains(text(), "Authentication attempt has failed")]')
+    BAD_CREDS = (By.XPATH, '//p[contains(text(), "Please check your username and passphrase")]')
 
     def log_in(self, username=None, password=None):
-        Wait(self.driver, util.get_medium_timeout()).until(ec.title_contains('Central Authentication Service'))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.title_contains('Authentication Service'))
         if username and password:
             app.logger.info(f'{username} is logging in')
             self.wait_for_element_and_type(self.USERNAME_INPUT, username)

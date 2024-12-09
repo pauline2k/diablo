@@ -138,7 +138,7 @@ class CoursePage(DiabloPages):
 
     def visible_meeting_time(self):
         els = self.elements(CoursePage.MEETING_TIMES)
-        return [el.get_attribute('innerText').replace('Start and end times:', '').strip() for el in els]
+        return [el.get_attribute('innerText').replace('Start and end times:', '').strip().split('\n')[0] for el in els]
 
     def visible_rooms(self):
         els = self.elements(CoursePage.ROOMS)
@@ -258,6 +258,7 @@ class CoursePage(DiabloPages):
 
     def save_collaborator_edits(self):
         self.wait_for_element_and_click(self.COLLAB_SAVE_BUTTON)
+        time.sleep(3)
 
     def cancel_collaborator_edits(self):
         self.wait_for_element_and_click(self.COLLAB_CXL_BUTTON)
@@ -291,6 +292,7 @@ class CoursePage(DiabloPages):
 
     def save_recording_type_edits(self):
         self.wait_for_element_and_click(self.RECORDING_TYPE_SAVE_BUTTON)
+        time.sleep(3)
 
     def cancel_recording_type_edits(self):
         self.wait_for_page_and_click_js(self.RECORDING_TYPE_CXL_BUTTON)
@@ -349,10 +351,10 @@ class CoursePage(DiabloPages):
 
     def select_recording_placement(self, publish_type, sites=None):
         app.logger.info(f'Selecting the radio button for {publish_type}')
-        if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
-            self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
+        if publish_type == RecordingPlacement.PLACE_IN_MY_MEDIA:
+            self.wait_for_page_and_click(self.PLACEMENT_MY_MEDIA_RADIO)
         else:
-            self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
+            self.wait_for_page_and_click(self.PLACEMENT_AUTOMATIC_RADIO)
             self.select_recording_placement_sites(sites)
 
     def enter_recording_placement_sites(self, sites):
@@ -363,7 +365,7 @@ class CoursePage(DiabloPages):
 
     def enter_recording_placement(self, publish_type, sites=None):
         app.logger.info(f'Selecting the radio button for {publish_type}')
-        if publish_type == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
+        if publish_type == RecordingPlacement.PLACE_IN_MY_MEDIA:
             self.wait_for_page_and_click_js(self.PLACEMENT_MY_MEDIA_RADIO)
         else:
             self.wait_for_page_and_click_js(self.PLACEMENT_AUTOMATIC_RADIO)
@@ -374,6 +376,7 @@ class CoursePage(DiabloPages):
 
     def save_recording_placement_edits(self):
         self.wait_for_element_and_click(self.PLACEMENT_SAVE_BUTTON)
+        time.sleep(3)
 
     def cancel_recording_placement_edits(self):
         self.wait_for_page_and_click_js(self.PLACEMENT_CXL_BUTTON)

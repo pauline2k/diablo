@@ -82,9 +82,9 @@ class TestOptOut0:
     def test_opt_out_prev_term(self):
         util.set_past_term_opt_out(instructor_0)
 
-    def test_semester_start_up(self):
+    def test_schedule_update(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_both_sections_scheduled(self):
         assert util.get_kaltura_id(recording_schedule_0_0)
@@ -173,10 +173,9 @@ class TestOptOut1:
         util.reset_section_test_data(section_0, delete_opt_outs=False)
         util.reset_section_test_data(section_1, delete_opt_outs=False)
 
-    def test_semester_start_up(self):
+    def test_schedule_updates_run(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_no_sections_scheduled(self):
         assert not util.get_kaltura_id(recording_schedule_0_0)
@@ -226,9 +225,9 @@ class TestOptOut2:
         util.reset_section_test_data(section_0)
         util.reset_section_test_data(section_1)
 
-    def test_semester_start_up(self):
+    def test_schedule_update(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_both_sections_scheduled(self):
         assert util.get_kaltura_id(recording_schedule_0_0)
@@ -354,9 +353,7 @@ class TestOptOut4:
         self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_no_sections_scheduled(self):
         assert not util.get_kaltura_id(recording_schedule_0_0)
@@ -490,9 +487,7 @@ class TestOptOut6:
         self.instructor_page.log_out()
         self.login_page.dev_auth()
         self.ouija_page.click_jobs_link()
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_unscheduled(self):
         self.kaltura_page.load_event_edit_page(recording_schedule_1.series_id)
@@ -530,9 +525,7 @@ class TestOptOut7:
         util.change_course_instructor(section_1, old_instructor=instructor_0, new_instructor=None)
 
     def test_run_update_encore(self):
-        self.jobs_page.run_schedule_updates_job()
-        self.jobs_page.run_kaltura_job()
-        self.jobs_page.run_emails_job()
+        self.jobs_page.run_schedule_update_job_sequence()
 
     def test_section_scheduled(self):
         assert util.get_kaltura_id(recording_schedule_1)

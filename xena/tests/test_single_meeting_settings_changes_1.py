@@ -76,6 +76,7 @@ class TestScheduling1:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     # CHECK FILTERS - NOT SCHEDULED
 
@@ -107,7 +108,7 @@ class TestScheduling1:
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
 
@@ -175,8 +176,8 @@ class TestScheduling1:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 1
 
     # VERIFY STATIC COURSE SIS DATA
 
@@ -216,7 +217,7 @@ class TestScheduling1:
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.instructor)
+        self.canvas_page.add_user_to_site(self.site, self.instructor, 'TA')
 
     def test_add_new_site(self):
         self.course_page.load_page(self.section)
@@ -232,14 +233,18 @@ class TestScheduling1:
 
     def test_course_history_rec_type(self):
         self.course_page.load_page(self.section)
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
-        self.course_page.verify_history_row('publish_type', old_val, new_val, self.admin, 'queued')
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            requestor=self.admin,
+                                            status='queued')
 
     def test_course_history_canvas_site(self):
-        old_val = '—'
-        new_val = CoursePage.expected_site_ids_converter([self.site])
-        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'queued')
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value='—',
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            requestor=self.admin,
+                                            status='queued')
 
     def test_changes_queued(self):
         assert self.course_page.is_present(CoursePage.UPDATES_QUEUED_MSG)
@@ -283,14 +288,19 @@ class TestScheduling1:
     def test_course_history_rec_type_updated(self):
         self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
-        self.course_page.verify_history_row('publish_type', old_val, new_val, self.admin, 'succeeded', published=True)
+        self.course_page.verify_history_row(field='publish_type',
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
+                                            requestor=self.admin,
+                                            status='succeeded',
+                                            published=True)
 
     def test_course_history_canvas_site_updated(self):
-        old_val = '—'
-        new_val = CoursePage.expected_site_ids_converter([self.site])
-        self.course_page.verify_history_row('canvas_site_ids', old_val, new_val, self.admin, 'succeeded',
+        self.course_page.verify_history_row(field='canvas_site_ids',
+                                            old_value='—',
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
+                                            requestor=self.admin,
+                                            status='succeeded',
                                             published=True)
 
     def test_changes_no_longer_queued(self):

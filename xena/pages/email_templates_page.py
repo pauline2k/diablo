@@ -48,6 +48,7 @@ class EmailTemplatesPage(DiabloPages):
     @staticmethod
     def template_codes():
         return [
+            'bcourses.list',
             'canvasSiteIds',
             'collaborators',
             'course.date.end',

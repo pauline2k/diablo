@@ -78,26 +78,27 @@ class TestWeirdTypeD:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.section.instructors[0])
 
     # CREATE COURSE SITE
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.section.instructors[0])
+        self.canvas_page.add_user_to_site(self.site, self.section.instructors[0], 'Designer')
 
     # SCHEDULE RECORDINGS
 
     def test_schedule_recordings(self):
         self.jobs_page.load_page()
-        self.jobs_page.run_semester_start_job_sequence()
+        self.jobs_page.run_schedule_update_job_sequence()
 
         assert util.get_kaltura_id(self.recording_schedule_0)
         self.recording_schedule_0.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule_0.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule_0.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
         assert util.get_kaltura_id(self.recording_schedule_1)
         self.recording_schedule_1.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule_1.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule_1.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     # CHECK FILTERS - SCHEDULED
 
@@ -122,8 +123,8 @@ class TestWeirdTypeD:
     # VERIFY ANNUNCIATION EMAIL
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_SEM_START, self.section,
-                                         self.section.instructors[0]) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.section.instructors[0]) == 1
 
     # FIRST MEETING: VERIFY SERIES IN DIABLO
 
@@ -244,20 +245,17 @@ class TestWeirdTypeD:
 
     def test_history_publish_type(self):
         self.course_page.load_page(self.section)
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         self.course_page.verify_history_row(field='publish_type',
-                                            old_value=old_val,
-                                            new_value=new_val,
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             requestor=self.section.instructors[0],
                                             status='succeeded',
                                             published=True)
 
     def test_history_site_id(self):
-        new_val = CoursePage.expected_site_ids_converter([self.site])
         self.course_page.verify_history_row(field='canvas_site_ids',
                                             old_value='—',
-                                            new_value=new_val,
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.section.instructors[0],
                                             status='succeeded',
                                             published=True)

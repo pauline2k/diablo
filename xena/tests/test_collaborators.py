@@ -70,6 +70,7 @@ class TestCollaborators0:
         util.reset_section_test_data(self.section)
 
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     def test_semester_start(self):
         self.jobs_page.load_page()
@@ -86,8 +87,8 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.proxy) == 'Co-Editor, Co-Publisher'
 
     def test_email_new_course_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 1
 
     def test_history_new_course_scheduled(self):
         self.course_page.load_page(self.section)
@@ -129,10 +130,13 @@ class TestCollaborators0:
                                          self.instructor) == 1
 
     def test_history_new_collaborator(self):
-        old_val = CoursePage.expected_uids_converter([self.proxy])
-        new_val = CoursePage.expected_uids_converter([self.proxy, self.manual_collaborator])
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.instructor, 'succeeded',
+        self.course_page.verify_history_row(field='collaborator_uids',
+                                            old_value=CoursePage.expected_uids_converter([self.proxy]),
+                                            new_value=CoursePage.expected_uids_converter(
+                                                [self.proxy, self.manual_collaborator]),
+                                            requestor=self.instructor,
+                                            status='succeeded',
                                             published=True)
 
     # Room removed, unscheduled
@@ -153,10 +157,12 @@ class TestCollaborators0:
                                          self.instructor) == 1
 
     def test_history_room_removed(self):
-        old_val = None
-        new_val = '—'
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('room_not_eligible', old_val, new_val, None, 'succeeded',
+        self.course_page.verify_history_row(field='room_not_eligible',
+                                            old_value=None,
+                                            new_value=None,
+                                            requestor=None,
+                                            status='succeeded',
                                             published=True)
 
     # Room restored, rescheduled.  Manual collaborator also restored.
@@ -177,8 +183,8 @@ class TestCollaborators0:
         assert self.kaltura_page.collaborator_perm(self.manual_collaborator) == 'Co-Editor, Co-Publisher'
 
     def test_email_room_restored(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.instructor) == 2
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 2
 
     def test_no_email_new_collaborator(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
@@ -218,6 +224,7 @@ class TestCollaborators1:
         util.reset_section_test_data(self.section)
         util.delete_course_instructor_row(self.section, self.proxy)
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
         self.login_page.load_page()
         self.login_page.dev_auth()
@@ -256,18 +263,20 @@ class TestCollaborators1:
         self.kaltura_page.verify_collaborators(self.section, [self.manual_collaborator])
 
     def test_email_new_scheduled(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.instructor) == 2
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 1
 
     def test_email_new_collaborator(self):
         assert util.get_sent_email_count(EmailTemplateType.INSTR_CHANGES_CONFIRMED, self.section,
                                          self.instructor) == 1
 
     def test_history_new_collaborator(self):
-        old_val = CoursePage.expected_uids_converter([])
-        new_val = CoursePage.expected_uids_converter([self.manual_collaborator])
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.admin, 'succeeded',
+        self.course_page.verify_history_row(field='collaborator_uids',
+                                            old_value=CoursePage.expected_uids_converter([]),
+                                            new_value=CoursePage.expected_uids_converter([self.manual_collaborator]),
+                                            requestor=self.admin,
+                                            status='succeeded',
                                             published=True)
 
     # Add proxy in SIS, becomes collaborator automatically
@@ -300,10 +309,13 @@ class TestCollaborators1:
                                          self.instructor) == 2
 
     def test_history_new_proxy(self):
-        old_val = CoursePage.expected_uids_converter([self.manual_collaborator])
-        new_val = CoursePage.expected_uids_converter([self.manual_collaborator, self.proxy])
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, None, 'succeeded',
+        self.course_page.verify_history_row(field='collaborator_uids',
+                                            old_value=CoursePage.expected_uids_converter([self.manual_collaborator]),
+                                            new_value=CoursePage.expected_uids_converter(
+                                                [self.manual_collaborator, self.proxy]),
+                                            requestor=None,
+                                            status='succeeded',
                                             published=True)
 
     # Remove manual collaborator
@@ -334,10 +346,13 @@ class TestCollaborators1:
                                          self.instructor) == 3
 
     def test_history_collaborator_removed(self):
-        old_val = CoursePage.expected_uids_converter([self.manual_collaborator, self.proxy])
-        new_val = CoursePage.expected_uids_converter([self.proxy])
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.admin, 'succeeded',
+        self.course_page.verify_history_row(field='collaborator_uids',
+                                            old_value=CoursePage.expected_uids_converter(
+                                                [self.manual_collaborator, self.proxy]),
+                                            new_value=CoursePage.expected_uids_converter([self.proxy]),
+                                            requestor=self.admin,
+                                            status='succeeded',
                                             published=True)
 
 
@@ -366,6 +381,7 @@ class TestCollaborators2:
         self.kaltura_page.reset_test_data(self.section)
         util.reset_section_test_data(self.section)
         util.reset_sent_email_test_data(self.section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
         self.login_page.load_page()
         self.login_page.dev_auth()
@@ -381,8 +397,8 @@ class TestCollaborators2:
         self.kaltura_page.verify_collaborators(self.section, self.section.proxies)
 
     def test_email_new_course(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 1
 
     def test_course_page_sis_data(self):
         self.jobs_page.load_page()
@@ -440,15 +456,19 @@ class TestCollaborators2:
                                          self.instructor) == 2
 
     def test_history_proxy_removed(self):
-        old_val = CoursePage.expected_uids_converter(self.section.proxies)
-        new_val = CoursePage.expected_uids_converter([self.proxy_1])
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, self.instructor, 'succeeded',
+        self.course_page.verify_history_row(field='collaborator_uids',
+                                            old_value=CoursePage.expected_uids_converter(self.section.proxies),
+                                            new_value=CoursePage.expected_uids_converter([self.proxy_1]),
+                                            requestor=self.instructor,
+                                            status='succeeded',
                                             published=True)
 
     def test_history_other_proxy_removed(self):
-        old_val = CoursePage.expected_uids_converter([self.proxy_1])
-        new_val = CoursePage.expected_uids_converter([])
         self.course_page.load_page(self.section)
-        self.course_page.verify_history_row('collaborator_uids', old_val, new_val, None, 'succeeded',
+        self.course_page.verify_history_row(field='collaborator_uids',
+                                            old_value=CoursePage.expected_uids_converter([self.proxy_1]),
+                                            new_value=CoursePage.expected_uids_converter([]),
+                                            requestor=None,
+                                            status='succeeded',
                                             published=True)

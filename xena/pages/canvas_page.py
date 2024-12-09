@@ -128,7 +128,7 @@ class CanvasPage(Page):
         self.hide_canvas_footer()
         Wait(self.driver, util.get_medium_timeout()).until(ec.frame_to_be_available_and_switch_to_it(CanvasPage.FRAME))
 
-    def add_teacher_to_site(self, site, user, section=None):
+    def add_user_to_site(self, site, user, role, section=None):
         app.logger.info(f'Adding UID {user.uid} to site ID {site.site_id} as a Teacher')
         self.driver.get(f"{app.config['CANVAS_BASE_URL']}/courses/{site.site_id}/external_tools/{app.config['CANVAS_ADD_USER_TOOL']}")
         self.wait_for_ripley_frame_and_switch()
@@ -140,6 +140,6 @@ class CanvasPage(Page):
             opt = self.element((By.XPATH, f'//option[contains(text(), "{section.code} {section.number}")]'))
             opt.click()
         role_select = Select(self.element(self.ROLE_SELECT))
-        role_select.select_by_visible_text('Teacher')
+        role_select.select_by_visible_text(role)
         self.wait_for_element_and_click(self.ADD_USER_BUTTON)
         self.when_present(self.SUCCESS_MSG, util.get_medium_timeout())

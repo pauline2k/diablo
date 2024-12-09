@@ -204,7 +204,7 @@ class KalturaPage(Page):
         self.wait_for_page_and_click(KalturaPage.SERIES_DELETE_BUTTON, 3)
         self.wait_for_element_and_click(KalturaPage.SERIES_DELETE_CONFIRM_BUTTON)
         redirect_url = f'{app.config["KALTURA_MEDIA_SPACE_URL"]}/calendar/index/calendar/'
-        Wait(self.driver, util.get_short_timeout()).until(ec.url_to_be(redirect_url))
+        Wait(self.driver, util.get_medium_timeout()).until(ec.url_to_be(redirect_url))
 
     # ACTUAL VS EXPECTED
 
@@ -266,13 +266,13 @@ class KalturaPage(Page):
 
         app.logger.info(f"Pub channels el class is {self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class')}")
 
-        if recording_schedule.recording_placement == RecordingPlacement.PUBLISH_TO_MY_MEDIA:
+        if recording_schedule.recording_placement == RecordingPlacement.PLACE_IN_MY_MEDIA:
             assert self.is_private()
         else:
             assert self.is_published()
 
-    def verify_site_categories(self, sites):
-        expected_count = len(sites) * 2
+    def verify_site_categories(self, sites, expected_count=None):
+        expected_count = expected_count or len(sites) * 2
         self.wait_for_delete_button()
         self.scroll_to_bottom()
         if expected_count > 0:

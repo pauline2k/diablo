@@ -73,12 +73,13 @@ class TestCrossListings:
 
         util.reset_sent_email_test_data(self.section)
         util.reset_sent_email_test_data(self.x_listed_section)
+        util.reset_sent_email_test_data(section=None, instructor=self.instructor)
 
     # CREATE A COURSE SITE
 
     def test_create_course_site(self):
         self.canvas_page.create_site(self.section, self.site)
-        self.canvas_page.add_teacher_to_site(self.site, self.instructor)
+        self.canvas_page.add_user_to_site(self.site, self.instructor, 'Teacher')
 
     # SCHEDULE RECORDINGS
 
@@ -87,7 +88,7 @@ class TestCrossListings:
         self.jobs_page.run_schedule_update_job_sequence()
         assert util.get_kaltura_id(self.recording_schedule)
         self.recording_schedule.recording_type = RecordingType.VIDEO_SANS_OPERATOR
-        self.recording_schedule.recording_placement = RecordingPlacement.PUBLISH_TO_MY_MEDIA
+        self.recording_schedule.recording_placement = RecordingPlacement.PLACE_IN_MY_MEDIA
 
     def test_click_series_link(self):
         self.course_page.load_page(self.section)
@@ -107,16 +108,13 @@ class TestCrossListings:
         self.kaltura_page.verify_site_categories([])
 
     def test_receive_annunciation_email(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.section,
-                                         self.instructor) == 1
-
-    def test_receive_annunciation_email_listing(self):
-        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, self.x_listed_section,
-                                         self.instructor) == 1
+        assert util.get_sent_email_count(EmailTemplateType.INSTR_ANNUNCIATION_NEW_COURSE_SCHED, section=None,
+                                         instructor=self.instructor) == 2
 
     # CHANGE PUBLISH TYPE TO AUTOMATIC
 
     def test_update_publish_type(self):
+        self.kaltura_page.close_window_and_switch()
         self.course_page.load_page(self.section)
         self.course_page.click_edit_recording_placement()
         self.course_page.enter_recording_placement(RecordingPlacement.PUBLISH_AUTOMATICALLY, sites=[self.site])
@@ -258,20 +256,17 @@ class TestCrossListings:
 
     def test_history_publish_type(self):
         self.course_page.load_page(self.section)
-        old_val = RecordingPlacement.PUBLISH_TO_MY_MEDIA.value['db']
-        new_val = RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db']
         self.course_page.verify_history_row(field='publish_type',
-                                            old_value=old_val,
-                                            new_value=new_val,
+                                            old_value=RecordingPlacement.PLACE_IN_MY_MEDIA.value['db'],
+                                            new_value=RecordingPlacement.PUBLISH_AUTOMATICALLY.value['db'],
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)
 
     def test_history_canvas_site(self):
-        new_val = CoursePage.expected_site_ids_converter([self.site])
         self.course_page.verify_history_row(field='canvas_site_ids',
                                             old_value='—',
-                                            new_value=new_val,
+                                            new_value=CoursePage.expected_site_ids_converter([self.site]),
                                             requestor=self.admin,
                                             status='succeeded',
                                             published=True)
