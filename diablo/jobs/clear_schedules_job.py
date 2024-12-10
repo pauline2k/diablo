@@ -38,7 +38,12 @@ class ClearSchedulesJob(BaseJob):
             for scheduled in course['scheduled'] or []:
                 try:
                     kaltura.delete(scheduled['kalturaScheduleId'])
-                    Scheduled.delete(term_id=term_id, section_id=course['sectionId'], kaltura_schedule_id=scheduled['kalturaScheduleId'])
+                    Scheduled.delete(
+                        term_id=term_id,
+                        section_id=course['sectionId'],
+                        kaltura_schedule_id=scheduled['kalturaScheduleId'],
+                        hard_delete=True,
+                    )
                 except Exception as e:
                     app.logger.error(
                         f"Failed to delete Kaltura schedule: term {term_id}, section {course['sectionId']},"
