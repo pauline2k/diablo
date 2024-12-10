@@ -174,9 +174,12 @@ class Scheduled(db.Model):
         return [r[0] for r in db.session.query(cls.section_id).filter(criteria).all()]
 
     @classmethod
-    def delete(cls, section_id, term_id, kaltura_schedule_id=None):
-        sql = """UPDATE scheduled SET deleted_at = now()
-            WHERE term_id = :term_id AND section_id = :section_id AND deleted_at IS NULL"""
+    def delete(cls, section_id, term_id, kaltura_schedule_id=None, hard_delete=False):
+        if hard_delete:
+            sql = 'DELETE FROM scheduled'
+        else:
+            sql = 'UPDATE scheduled SET deleted_at = now()'
+        sql += ' WHERE term_id = :term_id AND section_id = :section_id AND deleted_at IS NULL'
         params = {
             'section_id': section_id,
             'term_id': term_id,
@@ -185,6 +188,7 @@ class Scheduled(db.Model):
             sql += ' AND kaltura_schedule_id = :kaltura_schedule_id'
             params['kaltura_schedule_id'] = kaltura_schedule_id
         db.session.execute(text(sql), params)
+        std_commit()
 
     def update(self, **kwargs):
         for key, value in kwargs.items():
