@@ -1090,6 +1090,8 @@ export default {
       this.alertScreenReader('Recording placement edit cancelled.')
       this.$putFocusNextTick('btn-publish-type-edit')
       this.publishTypeEditing = false
+      this.publishType = this.course.publishType
+      this.publishCanvasSites = this.course.canvasSites
     },
     updateRecordingType() {
       this.recordingTypeUpdating = true
@@ -1111,6 +1113,7 @@ export default {
       this.alertScreenReader('Recording type edit cancelled.')
       this.$putFocusNextTick('btn-recording-type-edit')
       this.recordingTypeEditing = false
+      this.recordingType = this.course.recordingType
     },
   }
 }
