@@ -1063,6 +1063,94 @@ class TestUpdateOptOut:
             assert opt_out_updates[0]['requestedByUid'] == instructor_uids[0]
             assert opt_out_updates[0]['requestedByName'] == 'William Peter Blatty'
 
+    def test_no_redundant_opt_out_scheduling(self, client, fake_auth):
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id=section_1_id,
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is False
+            assert course_feed['hasOptedOut'] is True
+
+            # Blanket opt-out changes leave no per-course notation for courses already opted out.
+            opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
+            assert len(opt_out_updates) == 1
+
+    def test_no_redundant_blanket_opt_out_scheduling(self, client, fake_auth):
+        instructor_uids = get_instructor_uids(section_id=section_1_id, term_id=self.term_id)
+        fake_auth.login(instructor_uids[0])
+        with test_scheduling_workflow(app):
+            mock_scheduled(
+                section_id=section_1_id,
+                term_id=self.term_id,
+            )
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id=self.term_id,
+                section_id='all',
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id='all',
+                section_id='all',
+                opt_out=True,
+            )
+            std_commit(allow_test_environment=True)
+
+            self._api_opt_out_update(
+                client,
+                instructor_uid=instructor_uids[0],
+                term_id='all',
+                section_id='all',
+                opt_out=False,
+            )
+            std_commit(allow_test_environment=True)
+
+            course_feed = api_get_course(client, self.term_id, section_1_id)
+            assert course_feed['hasBlanketOptedOut'] is True
+            assert course_feed['hasOptedOut'] is True
+
+            # Blanket all-term opt-out changes leave no per-course notation for courses already blanket opted out per term.
+            opt_out_updates = [u for u in course_feed['updateHistory'] if u['fieldName'] == 'opted_out']
+            assert len(opt_out_updates) == 1
+
     def test_admin_toggle_opt_out(self, client, fake_auth):
         fake_auth.login(admin_uid)
         with test_scheduling_workflow(app):

@@ -66,6 +66,10 @@ class OptOut(db.Model):
         return cls.query.filter(and_(cls.instructor_uid == uid, cls.section_id == None)).all()  # noqa E711
 
     @classmethod
+    def get_opt_outs_for_instructor_uid(cls, instructor_uid, term_id):
+        return cls.query.filter(and_(cls.instructor_uid == instructor_uid, or_(cls.term_id == term_id, cls.term_id == None))).all()  # noqa E711
+
+    @classmethod
     def get_opt_outs_for_section(cls, section_id=None, term_id=None):
         return cls.query.filter_by(section_id=section_id, term_id=term_id).all()
 
