@@ -200,7 +200,7 @@ def update_course_note():
 
 @app.route('/api/course/opt_out/update', methods=['POST'])
 @login_required
-def update_opt_out():
+def update_opt_out():  # noqa C901
     params = request.get_json()
     instructor_uid = params.get('instructorUid')
     term_id = params.get('termId')
@@ -229,6 +229,8 @@ def update_opt_out():
         if not current_user.is_admin and str(instructor_uid) not in [str(i['uid']) for i in course['instructors']]:
             raise ForbiddenRequestError(f'Sorry, you are unauthorized to view the course {course["label"]}.')
 
+    blanket_opt_out = (section_id is None)
+
     def _schedule_opt_out_update(scheduled_section_id, scheduled_term_id):
         if opt_out:
             ScheduleUpdate.queue(
@@ -251,6 +253,12 @@ def update_opt_out():
                 requested_by_name=current_user.name,
             )
 
+    def _get_section_ids_opted_out():
+        return set(o.section_id for o in OptOut.get_opt_outs_for_instructor_uid(instructor_uid=instructor_uid, term_id=app.config['CURRENT_TERM_ID']))
+
+    if blanket_opt_out:
+        opt_outs_before_update = _get_section_ids_opted_out()
+
     if OptOut.update_opt_out(
         instructor_uid=instructor_uid,
         term_id=term_id,
@@ -259,9 +267,22 @@ def update_opt_out():
     ):
         if section_id:
             _schedule_opt_out_update(section_id, term_id)
-        else:
+        elif blanket_opt_out:
+            # If a blanket opt-out (no section ID specified) has been requested, queue opt-out updates only for sections that will
+            # actually change their opt-out status.
+            opt_outs_after_update = _get_section_ids_opted_out()
+
+            def _has_opt_out_difference(section_id, id_set_1, id_set_2):
+                return (section_id in id_set_1 or None in id_set_1) and not (section_id in id_set_2 or None in id_set_2)
+
             for scheduled_section_id in Scheduled.get_scheduled_per_instructor_uid(instructor_uid, app.config['CURRENT_TERM_ID']):
-                _schedule_opt_out_update(scheduled_section_id, app.config['CURRENT_TERM_ID'])
+                if opt_out:
+                    is_section_changed = _has_opt_out_difference(scheduled_section_id, opt_outs_after_update, opt_outs_before_update)
+                else:
+                    is_section_changed = _has_opt_out_difference(scheduled_section_id, opt_outs_before_update, opt_outs_after_update)
+                if is_section_changed:
+                    _schedule_opt_out_update(scheduled_section_id, app.config['CURRENT_TERM_ID'])
+
         return tolerant_jsonify({'optedOut': opt_out})
     else:
         raise InternalServerError('Failed to update opt-out.')
