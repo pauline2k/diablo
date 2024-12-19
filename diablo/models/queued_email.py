@@ -107,6 +107,11 @@ class QueuedEmail(db.Model):
         std_commit()
 
     @classmethod
+    def delete_type(cls, template_type, term_id):
+        db.session.query(cls).filter_by(template_type=template_type, term_id=term_id).delete()
+        std_commit()
+
+    @classmethod
     def get_all(cls, term_id):
         return cls.query.filter_by(term_id=term_id).order_by(cls.created_at).all()
 

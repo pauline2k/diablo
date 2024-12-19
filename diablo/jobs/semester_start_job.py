@@ -25,7 +25,7 @@ ENHANCEMENTS, OR MODIFICATIONS.
 from diablo.jobs.base_job import BaseJob
 from diablo.jobs.util import get_eligible_courses, remove_blackout_events, schedule_recordings
 from diablo.models.email_template import EmailTemplate
-from diablo.models.queued_email import announce_semester_start
+from diablo.models.queued_email import announce_semester_start, QueuedEmail
 from diablo.models.sis_section import AUTHORIZED_INSTRUCTOR_ROLE_CODES
 from flask import current_app as app
 
@@ -49,6 +49,9 @@ class SemesterStartJob(BaseJob):
                 courses_by_instructor_uid[instructor['uid']]['courses'].append(course)
 
         remove_blackout_events()
+
+        # If we have queued-but-not-sent emails from a previous job run, delete them in favor of the current batch.
+        QueuedEmail.delete_type('semester_start', term_id)
 
         # Queue semester start emails
         for uid, instructor_courses in courses_by_instructor_uid.items():
