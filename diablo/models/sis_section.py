@@ -146,11 +146,9 @@ class SisSection(db.Model):
             WHERE
                 meeting_location IS NOT NULL
                 AND meeting_location != ''
-                AND instructor_role_code = ANY(:instructor_role_codes)
             ORDER BY meeting_location
         """
-        args = {'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES}
-        return [row['meeting_location'] for row in db.session.execute(text(sql), args)]
+        return [row['meeting_location'] for row in db.session.execute(text(sql))]
 
     @classmethod
     def get_distinct_instructor_uids(cls):
@@ -387,7 +385,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
-                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+                'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
                 'location': location,
                 'term_id': term_id,
             },
@@ -431,7 +429,6 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
-                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -497,7 +494,7 @@ class SisSection(db.Model):
         rows = db.session.execute(
             text(sql),
             {
-                'instructor_role_codes': AUTHORIZED_INSTRUCTOR_ROLE_CODES,
+                'instructor_role_codes': ALL_INSTRUCTOR_ROLE_CODES,
                 'term_id': term_id,
             },
         )
@@ -649,15 +646,16 @@ def _to_api_json(  # noqa C901
         decorated_course_instructors = []
         for i in course['instructors']:
             instructor_has_opted_out = False
-            blanket_opt_outs_for_instructor = blanket_opt_outs_by_instructor_uid.get(i['uid'])
-            if blanket_opt_outs_for_instructor:
-                instructor_has_opted_out = True
-                blanket_opt_outs += blanket_opt_outs_for_instructor
-            else:
-                instructor_opt_out = next((o for o in opt_outs if o.instructor_uid == i['uid']), None)
-                if instructor_opt_out:
-                    course['optOuts'].append(instructor_opt_out.to_api_json())
+            if i['roleCode'] != 'APRX':
+                blanket_opt_outs_for_instructor = blanket_opt_outs_by_instructor_uid.get(i['uid'])
+                if blanket_opt_outs_for_instructor:
                     instructor_has_opted_out = True
+                    blanket_opt_outs += blanket_opt_outs_for_instructor
+                else:
+                    instructor_opt_out = next((o for o in opt_outs if o.instructor_uid == i['uid']), None)
+                    if instructor_opt_out:
+                        course['optOuts'].append(instructor_opt_out.to_api_json())
+                        instructor_has_opted_out = True
             decorated_course_instructors.append({**i, **{'hasOptedOut': instructor_has_opted_out}})
 
         if include_administrative_proxies:
@@ -796,7 +794,6 @@ def _sections_with_at_least_one_eligible_room():
             ON r2.location = s2.meeting_location
             AND r2.capability IS NOT NULL
             AND s2.term_id = :term_id
-            AND (s2.instructor_uid IS NULL OR s2.instructor_role_code = ANY(:instructor_role_codes))
             AND s2.is_principal_listing IS TRUE
             AND s2.deleted_at IS NULL
     """
