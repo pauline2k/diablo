@@ -262,7 +262,7 @@ class KalturaPage(Page):
         self.wait_for_delete_button()
         self.scroll_to_bottom()
         self.wait_for_element(self.SERIES_PUBLICATION_CHANNELS, util.get_short_timeout())
-        time.sleep(3)
+        time.sleep(5)
 
         app.logger.info(f"Pub channels el class is {self.element(self.SERIES_PUBLICATION_CHANNELS).get_attribute('class')}")
 

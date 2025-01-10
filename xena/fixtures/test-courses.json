@@ -27,7 +27,7 @@
       "dept_code": "ECON",
       "instructors": [
         {
-          "role": "PI"
+          "role": "TNIC"
         }
       ],
       "proxies": [],
@@ -50,7 +50,7 @@
       "dept_code": "PSYCH",
       "instructors": [
         {
-          "role": "ICNT"
+          "role": "PI"
         }
       ],
       "proxies": [],
@@ -76,7 +76,7 @@
           "role": "PI"
         },
         {
-          "role": "TNIC"
+          "role": "ICNT"
         }
       ],
       "proxies": [],
@@ -238,7 +238,7 @@
       "dept_code": "ENGLISH",
       "instructors": [
         {
-          "role": "PI"
+          "role": "TNIC"
         }
       ],
       "proxies": [],
