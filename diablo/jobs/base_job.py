@@ -66,6 +66,9 @@ class BaseJob:
                 elif JobHistory.is_job_running(job_key=self.key()):
                     app.logger.warn(f'Skipping job {self.key()} because an older instance is still running')
 
+                elif JobHistory.is_job_running(job_key='sis_data_refresh'):
+                    app.logger.warn(f'Skipping job {self.key()} because SIS data refresh is in progress')
+
                 else:
                     app.logger.info(f'Job {self.key()} is starting.')
                     job_tracker = JobHistory.job_started(job_key=self.key())
