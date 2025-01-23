@@ -591,7 +591,7 @@ def _to_api_json(  # noqa C901
                 'crossListings': cross_listed_courses,
                 'deletedAt': safe_strftime(row['deleted_at'], '%Y-%m-%d'),
                 'hasBlanketOptedOut': False,
-                'hasOptedOut': True if len(opt_outs) else False,
+                'hasOptedOut': False,
                 'instructionFormat': row['instruction_format'],
                 'instructors': instructors,
                 'isPrimary': row['is_primary'],
